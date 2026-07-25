@@ -1,4 +1,4 @@
-# PickClash
+
 
 Head-to-head NFL pick'em with weekly points. Users create a pick (moneyline or spread) at
 snapshotted odds, and others stake **with** or **against** it. Everyone starts each week
