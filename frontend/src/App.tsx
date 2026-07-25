@@ -5,6 +5,9 @@ import { LoginPage } from '@/pages/Login';
 import { RegisterPage } from '@/pages/Register';
 import { PlaceholderPage } from '@/pages/Placeholder';
 import { GamesPage } from '@/pages/Games';
+import { CreatePickPage } from '@/pages/CreatePick';
+import { FeedPage } from '@/pages/Feed';
+import { MyPicksPage } from '@/pages/MyPicks';
 
 export default function App() {
   return (
@@ -20,12 +23,10 @@ export default function App() {
         }
       >
         <Route index element={<Navigate to="/feed" replace />} />
-        <Route path="/feed" element={<PlaceholderPage title="Feed" description="Open picks land here in phase 3." />} />
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="/games" element={<GamesPage />} />
-        <Route
-          path="/my-picks"
-          element={<PlaceholderPage title="My Picks" description="Your positions land here in phase 3." />}
-        />
+        <Route path="/create-pick" element={<CreatePickPage />} />
+        <Route path="/my-picks" element={<MyPicksPage />} />
         <Route
           path="/leaderboard"
           element={<PlaceholderPage title="Leaderboard" description="Weekly rankings land in phase 5." />}
