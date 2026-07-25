@@ -3,35 +3,87 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notFound } from '../lib/errors.js';
-import { poolTotals } from '../lib/pools.js';
-import { createPick, joinPick } from '../services/picks.js';
+import { createPick } from '../services/picks.js';
+import { cancelOrder, placeOrder } from '../services/matching.js';
 import { getOrCreateCurrentWeek, getOrCreateWeek } from '../services/weeks.js';
+import { formatAmerican } from '../lib/odds.js';
 
 export const picksRouter = Router();
+
+const orderInclude = {
+  select: {
+    id: true,
+    userId: true,
+    side: true,
+    risked: true,
+    matched: true,
+    refunded: true,
+    limitOdds: true,
+    status: true,
+    createdAt: true,
+  },
+};
+
+const matchInclude = {
+  select: {
+    id: true,
+    withOrderId: true,
+    againstOrderId: true,
+    withStake: true,
+    againstLiability: true,
+    odds: true,
+    result: true,
+    createdAt: true,
+  },
+};
 
 const pickInclude = {
   creator: { select: { id: true, username: true } },
   game: true,
-  positions: {
-    select: { id: true, userId: true, side: true, stake: true, payout: true, createdAt: true },
-  },
+  orders: orderInclude,
+  matches: matchInclude,
 } as const;
 
 type PickWithRelations = Awaited<ReturnType<typeof prisma.pick.findFirstOrThrow<{ include: typeof pickInclude }>>>;
 
+function bookSummary(pick: PickWithRelations) {
+  const withAvailable = pick.orders
+    .filter((o) => o.side === 'WITH' && (o.status === 'OPEN' || o.status === 'PARTIAL'))
+    .reduce((sum, o) => sum + (o.risked - o.matched - o.refunded), 0);
+  const againstAvailable = pick.orders
+    .filter((o) => o.side === 'AGAINST' && (o.status === 'OPEN' || o.status === 'PARTIAL'))
+    .reduce((sum, o) => sum + (o.risked - o.matched - o.refunded), 0);
+  const totalMatched = pick.matches.reduce((sum, m) => sum + m.withStake, 0);
+
+  return {
+    withAvailable,
+    againstAvailable,
+    totalMatched,
+  };
+}
+
 function serializePick(pick: PickWithRelations, viewerId?: string) {
-  const { withPool, againstPool } = poolTotals(pick.positions);
-  const viewerPosition = viewerId ? pick.positions.find((p) => p.userId === viewerId) ?? null : null;
+  const { withAvailable, againstAvailable, totalMatched } = bookSummary(pick);
+  const viewerOrders = viewerId ? pick.orders.filter((o) => o.userId === viewerId) : [];
+  const viewerMatches = viewerId
+    ? pick.matches.filter((m) => {
+        const withOrder = pick.orders.find((o) => o.id === m.withOrderId)!;
+        const againstOrder = pick.orders.find((o) => o.id === m.againstOrderId)!;
+        return withOrder.userId === viewerId || againstOrder.userId === viewerId;
+      })
+    : [];
 
   return {
     ...pick,
-    pools: {
-      with: withPool,
-      against: againstPool,
-      participants: pick.positions.length,
+    book: {
+      withAvailable,
+      againstAvailable,
+      totalMatched,
+      marketOdds: formatAmerican(pick.sideOdds),
     },
-    viewerPosition,
-    isValid: withPool > 0 && againstPool > 0,
+    viewerOrders,
+    viewerMatches,
+    isValid: pick.matches.length > 0,
   };
 }
 
@@ -55,7 +107,7 @@ picksRouter.get('/', requireAuth, async (req, res, next) => {
       where: {
         game: { weekId: weekRecord.id, ...(gameId ? { id: gameId } : {}) },
         ...(status ? { status } : {}),
-        ...(mine ? { positions: { some: { userId: req.userId! } } } : {}),
+        ...(mine ? { orders: { some: { userId: req.userId! } } } : {}),
       },
       include: pickInclude,
       orderBy: { createdAt: 'desc' },
@@ -90,25 +142,35 @@ const createSchema = z.object({
 picksRouter.post('/', requireAuth, async (req, res, next) => {
   try {
     const input = createSchema.parse(req.body);
-    const { pick } = await createPick(req.userId!, input);
-    const created = await prisma.pick.findUniqueOrThrow({ where: { id: pick.id }, include: pickInclude });
+    const result = await createPick(req.userId!, input);
+    const created = await prisma.pick.findUniqueOrThrow({ where: { id: result.pick.id }, include: pickInclude });
     res.status(201).json(serializePick(created, req.userId));
   } catch (err) {
     next(err);
   }
 });
 
-const joinSchema = z.object({
+const orderSchema = z.object({
   side: z.enum(['WITH', 'AGAINST']),
-  stake: z.number().int().min(1),
+  risked: z.number().int().min(1),
+  limitOdds: z.number().int().optional(),
 });
 
-picksRouter.post('/:id/positions', requireAuth, async (req, res, next) => {
+picksRouter.post('/:id/orders', requireAuth, async (req, res, next) => {
   try {
-    const input = joinSchema.parse(req.body);
-    await joinPick(req.userId!, req.params.id, input);
+    const input = orderSchema.parse(req.body);
+    const result = await placeOrder(req.userId!, req.params.id, input);
     const updated = await prisma.pick.findUniqueOrThrow({ where: { id: req.params.id }, include: pickInclude });
-    res.status(201).json(serializePick(updated, req.userId));
+    res.status(201).json({ ...result, pick: serializePick(updated, req.userId) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+picksRouter.post('/orders/:id/cancel', requireAuth, async (req, res, next) => {
+  try {
+    const { refunded } = await cancelOrder(req.userId!, req.params.id);
+    res.json({ refunded });
   } catch (err) {
     next(err);
   }

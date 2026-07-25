@@ -14,13 +14,13 @@ meRouter.get('/', requireAuth, async (req, res, next) => {
     const week = await getOrCreateCurrentWeek();
     const balance = await ensureWeeklyBalance(user.id, week.id);
 
-    const positions = await prisma.position.findMany({
+    const orders = await prisma.order.findMany({
       where: { userId: user.id, pick: { game: { weekId: week.id } } },
       orderBy: { createdAt: 'desc' },
       include: {
-        pick: {
-          include: { game: true },
-        },
+        pick: { include: { game: true } },
+        withMatches: { select: { id: true, withStake: true, againstLiability: true, odds: true, result: true } },
+        againstMatches: { select: { id: true, withStake: true, againstLiability: true, odds: true, result: true } },
       },
     });
 
@@ -45,7 +45,7 @@ meRouter.get('/', requireAuth, async (req, res, next) => {
         locked: balance.locked,
         total: balance.balance + balance.locked,
       },
-      positions,
+      orders,
     });
   } catch (err) {
     next(err);

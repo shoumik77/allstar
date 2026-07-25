@@ -4,6 +4,8 @@ import { prisma } from '../prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notFound } from '../lib/errors.js';
 import { syncWeekGames } from '../services/games.js';
+import { settleGame } from '../services/settlement.js';
+import { sweepAllKickoffs, sweepGame } from '../services/sweep.js';
 
 export const adminRouter = Router();
 
@@ -42,6 +44,33 @@ adminRouter.post('/games/:id/state', requireAuth, async (req, res, next) => {
 
     const updated = await prisma.game.update({ where: { id: game.id }, data });
     res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+adminRouter.post('/sweep', requireAuth, async (req, res, next) => {
+  try {
+    const result = await sweepAllKickoffs();
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+adminRouter.post('/sweep/:gameId', requireAuth, async (req, res, next) => {
+  try {
+    const result = await sweepGame(req.params.gameId);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+adminRouter.post('/settle/:gameId', requireAuth, async (req, res, next) => {
+  try {
+    await settleGame(req.params.gameId);
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
