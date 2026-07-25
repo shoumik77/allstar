@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WeekStatus {
+  OPEN
+  SETTLING
+  CLOSED
+}
+
+enum GameStatus {
+  SCHEDULED
+  IN_PROGRESS
+  FINAL
+  POSTPONED
+}
+
+enum PickType {
+  MONEYLINE
+  SPREAD
+}
+
+enum TeamSide {
+  HOME
+  AWAY
+}
+
+enum PickStatus {
+  OPEN
+  LOCKED
+  VOID
+  SETTLED
+}
+
+enum PositionSide {
+  WITH
+  AGAINST
+}
+
+enum TransactionType {
+  STAKE
+  REFUND
+  PAYOUT
+  WEEKLY_RESET
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  passwordHash  String
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  balances     WeeklyBalance[]
+  picks        Pick[]
+  positions    Position[]
+  transactions Transaction[]
+}
+
+model Week {
+  id            String     @id @default(cuid())
+  season        Int
+  nflWeekNumber Int
+  startsAt      DateTime
+  endsAt        DateTime
+  status        WeekStatus @default(OPEN)
+
+  games        Game[]
+  balances     WeeklyBalance[]
+  transactions Transaction[]
+
+  @@unique([season, nflWeekNumber])
+}
+
+model WeeklyBalance {
+  id      String @id @default(cuid())
+  userId  String
+  weekId  String
+  balance Int    @default(1000)
+  locked  Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  week Week @relation(fields: [weekId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekId])
+}
+
+model Game {
+  id         String     @id @default(cuid())
+  externalId String     @unique
+  weekId     String
+  homeTeam   String
+  awayTeam   String
+  kickoff    DateTime
+  status     GameStatus @default(SCHEDULED)
+  homeScore  Int?
+  awayScore  Int?
+
+  // Current market odds (American). `spread` is the home team's line, e.g. -3.5
+  homeMoneyline  Int?
+  awayMoneyline  Int?
+  spread         Float?
+  homeSpreadOdds Int?
+  awaySpreadOdds Int?
+  oddsUpdatedAt  DateTime?
+
+  week  Week   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  picks Pick[]
+
+  @@index([weekId])
+}
+
+model Pick {
+  id        String     @id @default(cuid())
+  creatorId String
+  gameId    String
+  type      PickType
+  side      TeamSide
+  status    PickStatus @default(OPEN)
+  createdAt DateTime   @default(now())
+
+  // Odds snapshot taken at pick creation — payouts are pinned to these.
+  line              Float? // spread line for the chosen side (null for moneyline)
+  snapHomeMoneyline Int?
+  snapAwayMoneyline Int?
+  snapSpread        Float?
+  snapHomeSpreadOdds Int?
+  snapAwaySpreadOdds Int?
+  sideOdds          Int // American odds for the pick's side (WITH positions)
+  fadeOdds          Int // American odds for the opposite side (AGAINST positions)
+
+  creator      User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  game         Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  positions    Position[]
+  transactions Transaction[]
+
+  @@index([gameId])
+  @@index([status])
+}
+
+model Position {
+  id        String       @id @default(cuid())
+  pickId    String
+  userId    String
+  side      PositionSide
+  stake     Int
+  payout    Int?
+  createdAt DateTime     @default(now())
+
+  pick         Pick          @relation(fields: [pickId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([pickId, userId])
+  @@index([userId])
+}
+
+model Transaction {
+  id         String          @id @default(cuid())
+  userId     String
+  weekId     String
+  type       TransactionType
+  amount     Int // signed: negative for stakes, positive for refunds/payouts
+  pickId     String?
+  positionId String?
+  note       String?
+  createdAt  DateTime        @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  week     Week      @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  pick     Pick?     @relation(fields: [pickId], references: [id], onDelete: SetNull)
+  position Position? @relation(fields: [positionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, weekId])
+}
