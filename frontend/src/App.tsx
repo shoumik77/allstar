@@ -3,11 +3,11 @@ import { Layout } from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { LoginPage } from '@/pages/Login';
 import { RegisterPage } from '@/pages/Register';
-import { PlaceholderPage } from '@/pages/Placeholder';
 import { GamesPage } from '@/pages/Games';
 import { CreatePickPage } from '@/pages/CreatePick';
 import { FeedPage } from '@/pages/Feed';
 import { MyPicksPage } from '@/pages/MyPicks';
+import { LeaderboardPage } from '@/pages/Leaderboard';
 
 export default function App() {
   return (
@@ -27,10 +27,7 @@ export default function App() {
         <Route path="/games" element={<GamesPage />} />
         <Route path="/create-pick" element={<CreatePickPage />} />
         <Route path="/my-picks" element={<MyPicksPage />} />
-        <Route
-          path="/leaderboard"
-          element={<PlaceholderPage title="Leaderboard" description="Weekly rankings land in phase 5." />}
-        />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/feed" replace />} />

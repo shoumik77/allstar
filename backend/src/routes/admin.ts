@@ -6,6 +6,7 @@ import { notFound } from '../lib/errors.js';
 import { syncWeekGames } from '../services/games.js';
 import { settleGame } from '../services/settlement.js';
 import { sweepAllKickoffs, sweepGame } from '../services/sweep.js';
+import { closeWeek } from '../services/weeklyClose.js';
 
 export const adminRouter = Router();
 
@@ -71,6 +72,21 @@ adminRouter.post('/settle/:gameId', requireAuth, async (req, res, next) => {
   try {
     await settleGame(req.params.gameId);
     res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const closeWeekSchema = z.object({
+  weekId: z.string().optional(),
+  force: z.coerce.boolean().optional(),
+});
+
+adminRouter.post('/close-week', requireAuth, async (req, res, next) => {
+  try {
+    const { weekId, force } = closeWeekSchema.parse(req.body ?? {});
+    const result = await closeWeek(weekId, force);
+    res.json(result);
   } catch (err) {
     next(err);
   }

@@ -51,3 +51,31 @@ meRouter.get('/', requireAuth, async (req, res, next) => {
     next(err);
   }
 });
+
+meRouter.get('/transactions', requireAuth, async (req, res, next) => {
+  try {
+    const week = await getOrCreateCurrentWeek();
+    const page = Math.max(1, Number(req.query.page ?? '1'));
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit ?? '50')));
+    const skip = (page - 1) * limit;
+
+    const [items, count] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { userId: req.userId! },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: { pick: { include: { game: true } } },
+      }),
+      prisma.transaction.count({ where: { userId: req.userId! } }),
+    ]);
+
+    res.json({
+      week,
+      items,
+      pagination: { page, limit, total: count, pages: Math.ceil(count / limit) },
+    });
+  } catch (err) {
+    next(err);
+  }
+});

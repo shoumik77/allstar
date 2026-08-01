@@ -140,3 +140,38 @@ export type MeResponse = {
     againstMatches: MatchLite[];
   })[];
 };
+
+export type LeaderboardEntry = {
+  rank: number;
+  userId: string;
+  username: string;
+  available: number;
+  locked: number;
+  total: number;
+  share: number;
+};
+
+export type LeaderboardResponse = {
+  week: Week;
+  rankings: LeaderboardEntry[];
+};
+
+export type Transaction = {
+  id: string;
+  userId: string;
+  weekId: string;
+  type: string;
+  amount: number;
+  pickId?: string;
+  orderId?: string;
+  matchId?: string;
+  note: string | null;
+  createdAt: string;
+  pick?: GamePick & { game: Game };
+};
+
+export type TransactionsResponse = {
+  week: Week;
+  items: Transaction[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+};

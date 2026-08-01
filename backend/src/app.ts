@@ -6,6 +6,7 @@ import { meRouter } from './routes/me.js';
 import { gamesRouter } from './routes/games.js';
 import { adminRouter } from './routes/admin.js';
 import { picksRouter } from './routes/picks.js';
+import { leaderboardRouter } from './routes/leaderboard.js';
 import { errorHandler } from './middleware/error.js';
 
 export function createApp() {
@@ -19,6 +20,7 @@ export function createApp() {
   app.use('/me', meRouter);
   app.use('/games', gamesRouter);
   app.use('/picks', picksRouter);
+  app.use('/leaderboard', leaderboardRouter);
   app.use('/admin', adminRouter);
 
   app.use((_req, res) => res.status(404).json({ error: 'Not found', code: 'not_found' }));
