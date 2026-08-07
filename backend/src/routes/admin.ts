@@ -2,10 +2,10 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth } from '../middleware/auth.js';
-import { notFound } from '../lib/errors.js';
+import { badRequest, notFound } from '../lib/errors.js';
 import { syncWeekGames } from '../services/games.js';
-import { settleGame } from '../services/settlement.js';
-import { sweepAllKickoffs, sweepGame } from '../services/sweep.js';
+import { settleGame, settleGameAsPartOfWeek } from '../services/settlement.js';
+import { sweepAllKickoffs, sweepGame, sweepGameAsPartOfWeek } from '../services/sweep.js';
 import { closeWeek } from '../services/weeklyClose.js';
 
 export const adminRouter = Router();
@@ -86,6 +86,44 @@ adminRouter.post('/close-week', requireAuth, async (req, res, next) => {
   try {
     const { weekId, force } = closeWeekSchema.parse(req.body ?? {});
     const result = await closeWeek(weekId, force);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+const simulateSchema = z.object({
+  homeScore: z.number().int().min(0).max(200).optional(),
+  awayScore: z.number().int().min(0).max(200).optional(),
+});
+
+adminRouter.post('/games/:id/simulate', requireAuth, async (req, res, next) => {
+  try {
+    const { homeScore, awayScore } = simulateSchema.parse(req.body ?? {});
+    const result = await prisma.$transaction(async (tx) => {
+      const game = await tx.game.findUnique({ where: { id: req.params.id } });
+      if (!game) throw notFound('Game not found', 'game_not_found');
+      if (game.status === 'FINAL') throw badRequest('Game already final', 'game_already_final');
+
+      await tx.game.update({
+        where: { id: game.id },
+        data: { kickoff: new Date(Date.now() - 60_000) },
+      });
+
+      const sweep = await sweepGameAsPartOfWeek(tx, game.id);
+
+      const hs = homeScore ?? Math.floor(Math.random() * 45);
+      const as = awayScore ?? Math.floor(Math.random() * 45);
+      await tx.game.update({
+        where: { id: game.id },
+        data: { status: 'FINAL', homeScore: hs, awayScore: as },
+      });
+
+      await settleGameAsPartOfWeek(tx, game.id);
+
+      const settled = await tx.game.findUniqueOrThrow({ where: { id: game.id } });
+      return { game: settled, sweep };
+    });
     res.json(result);
   } catch (err) {
     next(err);
