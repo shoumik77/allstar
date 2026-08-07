@@ -7,6 +7,7 @@ import { formatPoints } from '@/lib/format';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function LeaderboardPage() {
   const [season, setSeason] = useState(new Date().getUTCFullYear());
@@ -25,7 +26,7 @@ export function LeaderboardPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Leaderboard</h1>
+      <h1 className="rule-dashed pb-3 font-pixel text-lg uppercase tracking-tight">Leaderboard</h1>
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
@@ -47,7 +48,7 @@ export function LeaderboardPage() {
 
       {query.isLoading && (
         <div className="flex justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+          <Loader2 className="h-6 w-6 animate-spin text-ink-soft" />
         </div>
       )}
 
@@ -55,32 +56,32 @@ export function LeaderboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Week {query.data.week.nflWeekNumber}</CardTitle>
-            <CardDescription>
+            <CardDescription className="font-pixel text-[9px] uppercase">
               {query.data.week.status} · {formatPoints(query.data.rankings.length)} users
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="text-left text-slate-500">
-                    <th className="pb-2">Rank</th>
-                    <th className="pb-2">User</th>
-                    <th className="pb-2 text-right">Available</th>
-                    <th className="pb-2 text-right">Locked</th>
-                    <th className="pb-2 text-right">Total</th>
+                  <tr className="border-b-2 border-ink text-left font-pixel text-[8px] uppercase text-ink-soft">
+                    <th className="pb-2 pr-2">Rk</th>
+                    <th className="pb-2 pr-2">User</th>
+                    <th className="pb-2 pr-2 text-right">Avail</th>
+                    <th className="pb-2 pr-2 text-right">Lockd</th>
+                    <th className="pb-2 pr-2 text-right">Total</th>
                     <th className="pb-2 text-right">Share</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="font-pixel text-[10px]">
                   {query.data.rankings.map((row) => (
-                    <tr key={row.userId} className="border-t border-slate-100 dark:border-slate-800">
-                      <td className="py-2 font-mono">{row.rank}</td>
-                      <td className="py-2">{row.username}</td>
-                      <td className="py-2 text-right font-mono">{row.available}</td>
-                      <td className="py-2 text-right font-mono">{row.locked}</td>
-                      <td className="py-2 text-right font-mono">{row.total}</td>
-                      <td className="py-2 text-right font-mono">{(row.share * 100).toFixed(1)}%</td>
+                    <tr key={row.userId} className="border-b-2 border-dashed border-ink/25">
+                      <td className={cn('py-3 pr-2', row.rank <= 3 && 'text-gold')}>{row.rank}</td>
+                      <td className="py-3 pr-2 uppercase">{row.username}</td>
+                      <td className="py-3 pr-2 text-right">{row.available}</td>
+                      <td className="py-3 pr-2 text-right text-ink-faint">{row.locked}</td>
+                      <td className="py-3 pr-2 text-right text-field">{row.total}</td>
+                      <td className="py-3 text-right">{(row.share * 100).toFixed(1)}%</td>
                     </tr>
                   ))}
                 </tbody>

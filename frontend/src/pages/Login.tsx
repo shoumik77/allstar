@@ -35,8 +35,8 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>
-            Pick<span className="text-brand">Clash</span>
+          <CardTitle className="text-base">
+            Pick<span className="text-varsity">Clash</span>
           </CardTitle>
           <CardDescription>Sign in to stake your weekly points.</CardDescription>
         </CardHeader>
@@ -58,15 +58,19 @@ export function LoginPage() {
               autoComplete="current-password"
               required
             />
-            {error && <p className="text-sm text-rose-400">{error}</p>}
+            {error && (
+              <p className="border-2 border-varsity bg-paper-sunken p-2 font-pixel text-[9px] uppercase leading-relaxed text-varsity">
+                {error}
+              </p>
+            )}
             <Button type="submit" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Sign in
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-slate-400">
+          <p className="mt-4 text-center text-sm text-ink-soft">
             No account?{' '}
-            <Link to="/register" className="text-brand hover:underline">
+            <Link to="/register" className="font-pixel text-[10px] uppercase text-varsity underline">
               Create one
             </Link>
           </p>

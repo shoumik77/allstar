@@ -18,7 +18,7 @@ export function MyPicksPage() {
   if (me.isLoading || txns.isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-ink-soft" />
       </div>
     );
   }
@@ -28,49 +28,60 @@ export function MyPicksPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">My picks</h1>
-      {orders.length === 0 && <p className="text-sm text-slate-400">You haven't placed any orders yet.</p>}
+      <h1 className="rule-dashed pb-3 font-pixel text-lg uppercase tracking-tight">My Picks</h1>
+      {orders.length === 0 && (
+        <p className="font-pixel text-[10px] uppercase text-ink-soft">You haven't placed any orders yet.</p>
+      )}
       {orders.map((o) => (
         <Card key={o.id}>
           <CardHeader>
             <CardTitle className="text-base">
               {o.pick.game.awayTeam} @ {o.pick.game.homeTeam}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="font-pixel text-[9px] uppercase leading-relaxed">
               {o.side} · risked {o.risked} · matched {o.matched} · {o.pick.type} {o.pick.side} · {o.pick.status}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="grid grid-cols-3 gap-2 border-t-2 border-dashed border-ink/30 pt-3">
             <div>
-              <span className="text-slate-500">Limit odds:</span>{' '}
-              <span className="font-mono">{formatAmerican(o.limitOdds)}</span>
+              <div className="font-pixel text-[8px] uppercase text-ink-soft">Limit Odds</div>
+              <div className="mt-1 font-pixel text-[11px]">{formatAmerican(o.limitOdds)}</div>
             </div>
             <div>
-              <span className="text-slate-500">Matched fills:</span>{' '}
-              {o.withMatches.length + o.againstMatches.length}
+              <div className="font-pixel text-[8px] uppercase text-ink-soft">Fills</div>
+              <div className="mt-1 font-pixel text-[11px]">
+                {o.withMatches.length + o.againstMatches.length}
+              </div>
             </div>
             <div>
-              <span className="text-slate-500">Remaining:</span>{' '}
-              <span className="font-mono">{o.risked - o.matched - o.refunded} pts</span>
+              <div className="font-pixel text-[8px] uppercase text-ink-soft">Remaining</div>
+              <div className="mt-1 font-pixel text-[11px]">{o.risked - o.matched - o.refunded} PTS</div>
             </div>
           </CardContent>
         </Card>
       ))}
 
-      <h2 className="text-xl font-bold">History</h2>
-      {transactions.length === 0 && <p className="text-sm text-slate-400">No transactions yet.</p>}
+      <h2 className="rule-dashed pb-3 font-pixel text-base uppercase tracking-tight">History</h2>
+      {transactions.length === 0 && (
+        <p className="font-pixel text-[10px] uppercase text-ink-soft">No transactions yet.</p>
+      )}
       {transactions.map((t) => (
         <Card key={t.id}>
-          <CardContent className="flex items-center justify-between p-4 text-sm">
-            <div>
-              <div className="font-medium">{t.type}</div>
-              <div className="text-slate-500">
+          <CardContent className="flex items-center justify-between gap-3 p-4">
+            <div className="min-w-0">
+              <div className="font-pixel text-[10px] uppercase">{t.type}</div>
+              <div className="mt-1 truncate text-sm text-ink-soft">
                 {t.pick ? `${t.pick.game.awayTeam} @ ${t.pick.game.homeTeam}` : t.note ?? ''}
               </div>
-              <div className="text-xs text-slate-400">{formatKickoff(t.createdAt)}</div>
+              <div className="mt-1 font-pixel text-[8px] uppercase text-ink-faint">
+                {formatKickoff(t.createdAt)}
+              </div>
             </div>
-            <div className={`font-mono font-medium ${t.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {t.amount >= 0 ? '+' : ''}{formatPoints(t.amount)}
+            <div
+              className={`shrink-0 font-pixel text-xs ${t.amount >= 0 ? 'text-field' : 'text-varsity'}`}
+            >
+              {t.amount >= 0 ? '+' : ''}
+              {formatPoints(t.amount)}
             </div>
           </CardContent>
         </Card>

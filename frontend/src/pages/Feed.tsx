@@ -28,7 +28,7 @@ export function FeedPage() {
   if (query.isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-ink-soft" />
       </div>
     );
   }
@@ -37,15 +37,17 @@ export function FeedPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Open picks</h1>
+      <div className="rule-dashed flex flex-wrap items-center justify-between gap-2 pb-3">
+        <h1 className="font-pixel text-lg uppercase tracking-tight">Open Picks</h1>
         <Link to="/games" className={cn(buttonVariants({ size: 'sm' }))}>
           <Plus className="h-4 w-4" />
-          Create pick
+          New Pick
         </Link>
       </div>
 
-      {picks.length === 0 && <p className="text-sm text-slate-400">No open picks yet.</p>}
+      {picks.length === 0 && (
+        <p className="font-pixel text-[10px] uppercase text-ink-soft">No open picks yet.</p>
+      )}
 
       {picks.map((pick) => (
         <PickCard
@@ -94,21 +96,21 @@ function PickCard({
         <CardTitle className="text-base">
           {pick.game.awayTeam} @ {pick.game.homeTeam}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="font-pixel text-[9px] uppercase leading-relaxed">
           {pick.type} · {pick.side} {line ?? market} · {formatKickoff(pick.game.kickoff)} · {pick.creator.username}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900">
-            <div className="text-slate-500">WITH</div>
-            <div className="font-mono font-medium">{pick.book.withAvailable} pts available</div>
-            <div className="text-slate-500">{market}</div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="border-2 border-ink bg-paper-sunken p-3">
+            <div className="font-pixel text-[8px] uppercase text-ink-soft">With</div>
+            <div className="mt-2 font-pixel text-[11px] text-field">{pick.book.withAvailable} PTS</div>
+            <div className="mt-1 font-pixel text-[9px] text-ink-faint">{market}</div>
           </div>
-          <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900">
-            <div className="text-slate-500">AGAINST</div>
-            <div className="font-mono font-medium">{pick.book.againstAvailable} pts available</div>
-            <div className="text-slate-500">{fadeMarket}</div>
+          <div className="border-2 border-ink bg-paper-sunken p-3">
+            <div className="font-pixel text-[8px] uppercase text-ink-soft">Against</div>
+            <div className="mt-2 font-pixel text-[11px] text-varsity">{pick.book.againstAvailable} PTS</div>
+            <div className="mt-1 font-pixel text-[9px] text-ink-faint">{fadeMarket}</div>
           </div>
         </div>
 
@@ -116,7 +118,7 @@ function PickCard({
           <div className="grid flex-1 grid-cols-2 gap-2">
             <Button
               type="button"
-              variant={side === 'WITH' ? 'default' : 'outline'}
+              variant={side === 'WITH' ? 'field' : 'outline'}
               onClick={() => setSide('WITH')}
             >
               WITH
@@ -138,7 +140,7 @@ function PickCard({
           />
           <Button onClick={onPlace} disabled={busy || !side || !stake}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            Place
+            Place Bet
           </Button>
         </div>
       </CardContent>

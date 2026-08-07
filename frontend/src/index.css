@@ -4,11 +4,31 @@
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
-    @apply bg-surface text-slate-100 antialiased;
-    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    @apply bg-paper text-ink;
+    font-family: 'Pixelify Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    /* Halftone dot texture so the cream reads as newsprint, not flat beige. */
+    background-image: radial-gradient(rgba(43, 35, 32, 0.07) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+
+  ::selection {
+    @apply bg-ink text-paper;
+  }
+}
+
+@layer components {
+  /* Newspaper column rule. */
+  .rule-dashed {
+    @apply border-b-2 border-dashed border-ink/30;
+  }
+
+  /* Chunky press-down interaction shared by buttons and button-like links. */
+  .press {
+    @apply shadow-hard transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-hard-sm;
   }
 }

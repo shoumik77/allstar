@@ -37,13 +37,17 @@ export function CreatePickPage() {
   if (gameQuery.isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-ink-soft" />
       </div>
     );
   }
 
   if (!game) {
-    return <p className="text-sm text-rose-400">Game not found</p>;
+    return (
+      <p className="border-2 border-varsity bg-paper-raised p-3 font-pixel text-[10px] uppercase text-varsity">
+        Game not found
+      </p>
+    );
   }
 
   const g = game;
@@ -73,8 +77,8 @@ export function CreatePickPage() {
     <div className="mx-auto max-w-md">
       <Card>
         <CardHeader>
-          <CardTitle>Create a pick</CardTitle>
-          <CardDescription>
+          <CardTitle>Create a Pick</CardTitle>
+          <CardDescription className="font-pixel text-[9px] uppercase leading-relaxed">
             {g.awayTeam} @ {g.homeTeam} · {formatKickoff(g.kickoff)}
           </CardDescription>
         </CardHeader>
@@ -99,15 +103,15 @@ export function CreatePickPage() {
             </div>
 
             {type === 'SPREAD' && (
-              <div className="rounded-lg bg-surface-raised p-3 text-sm">
-                <span className="text-slate-400">Spread: </span>
-                <span className="font-mono font-medium">{formatSpread(spread)}</span>
+              <div className="flex items-center justify-between border-2 border-ink bg-paper-sunken p-3">
+                <span className="font-pixel text-[8px] uppercase text-ink-soft">Spread</span>
+                <span className="font-pixel text-[11px]">{formatSpread(spread)}</span>
               </div>
             )}
 
-            <div className="rounded-lg bg-surface-raised p-3 text-sm">
-              <span className="text-slate-400">Market odds: </span>
-              <span className="font-mono font-medium">{formatAmerican(marketOdds)}</span>
+            <div className="flex items-center justify-between border-2 border-ink bg-paper-sunken p-3">
+              <span className="font-pixel text-[8px] uppercase text-ink-soft">Market Odds</span>
+              <span className="font-pixel text-[11px] text-field">{formatAmerican(marketOdds)}</span>
             </div>
 
             <Input
@@ -128,7 +132,9 @@ export function CreatePickPage() {
             />
 
             {(error || mutation.error) && (
-              <p className="text-sm text-rose-400">{error ?? (mutation.error instanceof Error ? mutation.error.message : 'Failed')}</p>
+              <p className="border-2 border-varsity bg-paper-sunken p-2 font-pixel text-[9px] uppercase leading-relaxed text-varsity">
+                {error ?? (mutation.error instanceof Error ? mutation.error.message : 'Failed')}
+              </p>
             )}
 
             <Button type="submit" disabled={mutation.isPending}>

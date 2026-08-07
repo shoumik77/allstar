@@ -16,10 +16,10 @@ export function Layout() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-surface-border bg-surface/80 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4">
-          <span className="text-lg font-bold tracking-tight">
-            Pick<span className="text-brand">Clash</span>
+      <header className="sticky top-0 z-10 border-b-4 border-ink bg-paper">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-4 py-3">
+          <span className="font-pixel text-base uppercase tracking-tight">
+            Pick<span className="text-varsity">Clash</span>
           </span>
 
           <nav className="flex flex-1 items-center gap-1">
@@ -29,8 +29,8 @@ export function Layout() {
                 to={to}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-surface-raised hover:text-slate-100',
-                    isActive && 'bg-surface-raised text-slate-100',
+                    'flex items-center gap-2 border-2 border-transparent px-3 py-2 font-pixel text-[10px] uppercase text-ink-soft transition-colors hover:text-ink',
+                    isActive && 'border-ink bg-paper-raised text-ink shadow-hard-sm',
                   )
                 }
               >
@@ -42,11 +42,13 @@ export function Layout() {
 
           {me && (
             <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-sm font-medium leading-tight">{me.user.username}</div>
-                <div className="text-xs text-slate-400">
-                  {me.balance.available.toLocaleString()} pts
-                  {me.balance.locked > 0 && ` · ${me.balance.locked.toLocaleString()} locked`}
+              <div className="border-2 border-ink bg-paper-raised px-3 py-1.5 text-right shadow-hard-sm">
+                <div className="font-pixel text-[10px] uppercase leading-tight">{me.user.username}</div>
+                <div className="font-pixel text-[9px] leading-relaxed text-field">
+                  {me.balance.available.toLocaleString()} PTS
+                  {me.balance.locked > 0 && (
+                    <span className="text-ink-faint"> · {me.balance.locked.toLocaleString()} LKD</span>
+                  )}
                 </div>
               </div>
               <Button variant="ghost" size="sm" onClick={logout} aria-label="Log out">

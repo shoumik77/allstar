@@ -40,17 +40,17 @@ function SimulateGame({ gameId }: { gameId: string }) {
         placeholder="H"
         value={home}
         onChange={(e) => setHome(e.target.value)}
-        className="h-8 w-14 text-center"
+        className="h-9 w-14 px-1 text-center font-pixel text-[10px]"
       />
       <Input
         type="number"
         placeholder="A"
         value={away}
         onChange={(e) => setAway(e.target.value)}
-        className="h-8 w-14 text-center"
+        className="h-9 w-14 px-1 text-center font-pixel text-[10px]"
       />
-      <Button size="sm" variant="outline" onClick={handleSimulate} disabled={isPending} className="text-xs">
-        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Simulate'}
+      <Button size="sm" variant="outline" onClick={handleSimulate} disabled={isPending}>
+        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Sim'}
       </Button>
     </div>
   );
@@ -65,30 +65,38 @@ export function GamesPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+        <Loader2 className="h-6 w-6 animate-spin text-ink-soft" />
       </div>
     );
   }
 
   if (error) {
-    return <p className="text-sm text-rose-400">{error instanceof Error ? error.message : 'Failed to load games'}</p>;
+    return (
+      <p className="border-2 border-varsity bg-paper-raised p-3 font-pixel text-[10px] uppercase text-varsity">
+        {error instanceof Error ? error.message : 'Failed to load games'}
+      </p>
+    );
   }
 
   const games = data?.games ?? [];
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">This week's slate</h1>
-        <span className="text-sm text-slate-400">
+      <div className="rule-dashed flex flex-wrap items-baseline justify-between gap-2 pb-3">
+        <h1 className="font-pixel text-lg uppercase tracking-tight">This Week's Slate</h1>
+        <span className="font-pixel text-[10px] uppercase text-ink-soft">
           Week {data?.week.nflWeekNumber} · {data?.week.season}
         </span>
       </div>
 
       {games.length === 0 && (
         <Card>
-          <CardContent className="p-5 text-sm text-slate-400">
-            No games synced yet. Run <code className="text-slate-200">npm run seed --workspace backend</code>.
+          <CardContent className="p-5 text-sm text-ink-soft">
+            No games synced yet. Run{' '}
+            <code className="border-2 border-ink bg-paper-sunken px-1 font-pixel text-[10px] text-ink">
+              npm run seed --workspace backend
+            </code>
+            .
           </CardContent>
         </Card>
       )}
@@ -102,30 +110,34 @@ export function GamesPage() {
             <Card key={game.id}>
               <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <div className="text-xs uppercase tracking-wide text-slate-500">{formatKickoff(game.kickoff)}</div>
-                  <div className="mt-1 truncate text-base font-semibold">
-                    {game.awayTeam} <span className="text-slate-500">@</span> {game.homeTeam}
+                  <div className="font-pixel text-[9px] uppercase tracking-wide text-ink-soft">
+                    {formatKickoff(game.kickoff)}
+                  </div>
+                  <div className="mt-2 truncate font-pixel text-xs uppercase">
+                    {game.awayTeam} <span className="text-varsity">@</span> {game.homeTeam}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-                    <div className="text-slate-400">Away</div>
-                    <div className="text-slate-400">Home</div>
-                    <div className="font-mono">
-                      {formatSpread(awaySpread)} <span className="text-slate-500">({formatAmerican(game.awaySpreadOdds)})</span>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 border-2 border-ink bg-paper-sunken p-3">
+                    <div className="font-pixel text-[8px] uppercase text-ink-soft">Away</div>
+                    <div className="font-pixel text-[8px] uppercase text-ink-soft">Home</div>
+                    <div className="font-pixel text-[10px]">
+                      {formatSpread(awaySpread)}{' '}
+                      <span className="text-ink-faint">({formatAmerican(game.awaySpreadOdds)})</span>
                     </div>
-                    <div className="font-mono">
-                      {formatSpread(homeSpread)} <span className="text-slate-500">({formatAmerican(game.homeSpreadOdds)})</span>
+                    <div className="font-pixel text-[10px]">
+                      {formatSpread(homeSpread)}{' '}
+                      <span className="text-ink-faint">({formatAmerican(game.homeSpreadOdds)})</span>
                     </div>
-                    <div className="font-mono">{formatAmerican(game.awayMoneyline)}</div>
-                    <div className="font-mono">{formatAmerican(game.homeMoneyline)}</div>
+                    <div className="font-pixel text-[10px] text-field">{formatAmerican(game.awayMoneyline)}</div>
+                    <div className="font-pixel text-[10px] text-field">{formatAmerican(game.homeMoneyline)}</div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Link to={`/create-pick?gameId=${game.id}`} className={cn(buttonVariants({ size: 'sm' }))}>
                       <Plus className="h-4 w-4" />
-                      Create pick
+                      New Pick
                     </Link>
                     {import.meta.env.DEV && <SimulateGame gameId={game.id} />}
                   </div>
