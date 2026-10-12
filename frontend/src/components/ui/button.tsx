@@ -12,6 +12,7 @@ export const buttonVariants = cva(
         ghost: 'border-transparent bg-transparent text-ink shadow-none hover:bg-paper-sunken active:translate-x-0 active:translate-y-0 active:shadow-none',
         danger: 'bg-ink text-paper-raised hover:bg-ink/85',
         field: 'bg-field text-paper-raised hover:bg-field-hover',
+        gold: 'bg-gold-bright text-ink hover:bg-gold-hover',
       },
       size: {
         default: 'h-11 px-4 text-[11px]',

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { tokenStore } from '@/lib/api';
+import { EntryShell } from '@/components/EntryShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -33,13 +33,14 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xs">Create your account</CardTitle>
-          <CardDescription>Start each week with 1,000 points.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <EntryShell className="flex flex-col items-center justify-center">
+      <div className="w-full max-w-sm border-4 border-ink bg-paper-raised text-ink shadow-hard-gold-xl">
+        <div className="flex items-center gap-2 border-b-4 border-ink bg-varsity px-5 py-3 font-pixel text-[10px] uppercase text-paper-raised">
+          <UserPlus className="h-4 w-4" />
+          New player
+        </div>
+        <div className="p-5">
+          <p className="mb-4 text-sm text-ink-soft">Create your account. Start each week with 1,000 points.</p>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
             <Input
               type="email"
@@ -72,7 +73,7 @@ export function RegisterPage() {
                 {error}
               </p>
             )}
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" variant="gold" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Create account
             </Button>
@@ -83,8 +84,11 @@ export function RegisterPage() {
               Sign in
             </Link>
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+      <Link to="/" className="mt-6 font-pixel text-[9px] uppercase text-gold-bright hover:underline">
+        ← Back to field
+      </Link>
+    </EntryShell>
   );
 }

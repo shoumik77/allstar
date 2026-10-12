@@ -31,4 +31,57 @@
   .press {
     @apply shadow-hard transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-hard-sm;
   }
+
+  /* Night-game turf: floodlight glow, chalk yard lines, and a turf gradient. */
+  .stadium {
+    @apply relative isolate bg-turf text-chalk;
+    background-image:
+      radial-gradient(ellipse 70% 45% at 50% -8%, rgba(242, 182, 50, 0.38), transparent 70%),
+      repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 94px,
+        rgba(244, 241, 230, 0.14) 94px,
+        rgba(244, 241, 230, 0.14) 96px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0,
+        transparent 46px,
+        rgba(244, 241, 230, 0.05) 46px,
+        rgba(244, 241, 230, 0.05) 48px
+      ),
+      linear-gradient(180deg, #1b5a33 0%, #0f3d23 45%, #082416 100%);
+    background-attachment: fixed, fixed, fixed, fixed;
+  }
+
+  /* Faint CRT scanlines over the stadium. */
+  .scanlines::before {
+    content: '';
+    @apply pointer-events-none absolute inset-0 -z-10;
+    background: repeating-linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.12) 0,
+      rgba(0, 0, 0, 0.12) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  }
+
+  /* Hover lift for card-like tiles. */
+  .lift {
+    @apply transition-transform duration-150 hover:-translate-y-1;
+  }
+
+  .ticker-track {
+    @apply flex w-max animate-ticker whitespace-nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker,
+  .animate-blink,
+  .animate-pulse-dot {
+    animation: none;
+  }
 }

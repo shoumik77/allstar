@@ -19,7 +19,7 @@ export function Layout() {
       <header className="sticky top-0 z-10 border-b-4 border-ink bg-paper">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-4 py-3">
           <span className="font-pixel text-base uppercase tracking-tight">
-            Pick<span className="text-varsity">Clash</span>
+            All<span className="text-varsity">Star</span>
           </span>
 
           <nav className="flex flex-1 items-center gap-1">

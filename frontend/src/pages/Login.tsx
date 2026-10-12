@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { tokenStore } from '@/lib/api';
+import { EntryShell } from '@/components/EntryShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -32,15 +32,14 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Pick<span className="text-varsity">Clash</span>
-          </CardTitle>
-          <CardDescription>Sign in to stake your weekly points.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <EntryShell className="flex flex-col items-center justify-center">
+      <div className="w-full max-w-sm border-4 border-ink bg-paper-raised text-ink shadow-hard-gold-xl">
+        <div className="flex items-center gap-2 border-b-4 border-ink bg-varsity px-5 py-3 font-pixel text-[10px] uppercase text-paper-raised">
+          <LogIn className="h-4 w-4" />
+          Sign in
+        </div>
+        <div className="p-5">
+          <p className="mb-4 text-sm text-ink-soft">Back for another week? Stake your 1,000 points.</p>
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
             <Input
               type="email"
@@ -63,7 +62,7 @@ export function LoginPage() {
                 {error}
               </p>
             )}
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" variant="gold" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Sign in
             </Button>
@@ -71,11 +70,14 @@ export function LoginPage() {
           <p className="mt-4 text-center text-sm text-ink-soft">
             No account?{' '}
             <Link to="/register" className="font-pixel text-[10px] uppercase text-varsity underline">
-              Create one
+              New player
             </Link>
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+      <Link to="/" className="mt-6 font-pixel text-[9px] uppercase text-gold-bright hover:underline">
+        ← Back to field
+      </Link>
+    </EntryShell>
   );
 }

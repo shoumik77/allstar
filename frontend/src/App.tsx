@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
+import { AccessGate } from '@/components/AccessGate';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { HomePage } from '@/pages/Home';
 import { LoginPage } from '@/pages/Login';
 import { RegisterPage } from '@/pages/Register';
 import { GamesPage } from '@/pages/Games';
@@ -12,17 +14,33 @@ import { LeaderboardPage } from '@/pages/Leaderboard';
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/" element={<HomePage />} />
+      <Route
+        path="/login"
+        element={
+          <AccessGate>
+            <LoginPage />
+          </AccessGate>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <AccessGate>
+            <RegisterPage />
+          </AccessGate>
+        }
+      />
 
       <Route
         element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
+          <AccessGate>
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          </AccessGate>
         }
       >
-        <Route index element={<Navigate to="/feed" replace />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/games" element={<GamesPage />} />
         <Route path="/create-pick" element={<CreatePickPage />} />
@@ -30,7 +48,7 @@ export default function App() {
         <Route path="/leaderboard" element={<LeaderboardPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/feed" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
