@@ -11,7 +11,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed": "tsx src/scripts/seed.ts",
-    "test": "vitest run"
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:all": "vitest run"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

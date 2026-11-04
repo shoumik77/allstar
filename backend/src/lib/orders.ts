@@ -2,6 +2,7 @@ import { profitMultiplier } from './odds.js';
 
 export const MIN_RISK = 10;
 export const MAX_RISK_BALANCE_FRACTION = 0.25;
+export const MAX_RISK_BALANCE_MULTIPLE = 4;
 
 export type OrderSideValue = 'WITH' | 'AGAINST';
 

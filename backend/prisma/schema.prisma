@@ -94,6 +94,8 @@ model Week {
   @@unique([season, nflWeekNumber])
 }
 
+// `balance >= 0` and `locked >= 0` are enforced by CHECK constraints added in
+// the `weekly_balance_nonnegative` migration — Prisma can't express CHECKs.
 model WeeklyBalance {
   id      String @id @default(cuid())
   userId  String

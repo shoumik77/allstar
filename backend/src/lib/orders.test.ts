@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MAX_RISK_BALANCE_MULTIPLE,
   isCompatible,
   liabilityFor,
   matchOrder,
@@ -185,6 +186,14 @@ describe('stake limits', () => {
   it('caps risk at 25% of balance', () => {
     expect(maxRiskFor(1000)).toBe(250);
     expect(maxRiskFor(999)).toBe(249);
+  });
+
+  it('agrees with the conditional-debit predicate: risk r allowed iff balance >= 4 * r', () => {
+    for (let balance = 0; balance <= 2000; balance += 37) {
+      for (let risked = 1; risked <= 500; risked += 13) {
+        expect(maxRiskFor(balance) >= risked).toBe(balance >= risked * MAX_RISK_BALANCE_MULTIPLE);
+      }
+    }
   });
 });
 

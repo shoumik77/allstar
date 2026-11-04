@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client';
 import type { Order, OrderSide, Pick } from '@prisma/client';
 import { prisma } from '../prisma.js';
-import { badRequest, notFound } from '../lib/errors.js';
-import { MIN_RISK, matchOrder, maxRiskFor, type BookOrder, type Fill } from '../lib/orders.js';
+import { badRequest, conflict, notFound } from '../lib/errors.js';
+import { MAX_RISK_BALANCE_MULTIPLE, MIN_RISK, matchOrder, maxRiskFor, type BookOrder, type Fill } from '../lib/orders.js';
 import { ensureWeeklyBalance } from './weeks.js';
 
 export type PlaceOrderInput = {
@@ -96,13 +96,20 @@ export async function placeOrder(
 
     // Reserve the full risked amount up front; matching only decides how much of
     // it ends up working.
+    const debited = await tx.weeklyBalance.updateMany({
+      where: { userId, weekId: pick.game.weekId, balance: { gte: input.risked * MAX_RISK_BALANCE_MULTIPLE } },
+      data: { balance: { decrement: input.risked }, locked: { increment: input.risked } },
+    });
+    if (debited.count === 0) {
+      const fresh = await tx.weeklyBalance.findUniqueOrThrow({
+        where: { userId_weekId: { userId, weekId: pick.game.weekId } },
+      });
+      assertRiskAllowed(input.risked, fresh.balance); // throws insufficient_balance / risk_above_max
+      throw conflict('Balance changed while placing order', 'balance_conflict'); // unreachable guard
+    }
+
     const order = await tx.order.create({
       data: { pickId: pick.id, userId, side: input.side, risked: input.risked, limitOdds },
-    });
-
-    await tx.weeklyBalance.update({
-      where: { userId_weekId: { userId, weekId: pick.game.weekId } },
-      data: { balance: { decrement: input.risked }, locked: { increment: input.risked } },
     });
 
     await tx.transaction.create({
