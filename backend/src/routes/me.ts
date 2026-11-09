@@ -1,10 +1,23 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { notFound } from '../lib/errors.js';
 import { ensureWeeklyBalance, getOrCreateCurrentWeek } from '../services/weeks.js';
 
 export const meRouter = Router();
+
+const ordersQuerySchema = z.object({
+  scope: z.enum(['week', 'all']).default('week'),
+});
+
+const transactionsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  type: z
+    .enum(['STAKE', 'REFUND', 'PAYOUT', 'ORDER_CANCEL', 'UNMATCHED_REFUND', 'WEEKLY_RESET', 'SETTLEMENT_LOSS'])
+    .optional(),
+});
 
 meRouter.get('/', requireAuth, async (req, res, next) => {
   try {
@@ -52,22 +65,49 @@ meRouter.get('/', requireAuth, async (req, res, next) => {
   }
 });
 
+meRouter.get('/orders', requireAuth, async (req, res, next) => {
+  try {
+    const { scope } = ordersQuerySchema.parse(req.query);
+    const week = await getOrCreateCurrentWeek();
+
+    const orders = await prisma.order.findMany({
+      where: {
+        userId: req.userId!,
+        ...(scope === 'week' ? { pick: { game: { weekId: week.id } } } : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        pick: { include: { game: { include: { week: true } } } },
+        withMatches: { select: { id: true, withStake: true, againstLiability: true, odds: true, result: true } },
+        againstMatches: { select: { id: true, withStake: true, againstLiability: true, odds: true, result: true } },
+      },
+    });
+
+    res.json({ week, orders });
+  } catch (err) {
+    next(err);
+  }
+});
+
 meRouter.get('/transactions', requireAuth, async (req, res, next) => {
   try {
+    const { page, limit, type } = transactionsQuerySchema.parse(req.query);
     const week = await getOrCreateCurrentWeek();
-    const page = Math.max(1, Number(req.query.page ?? '1'));
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit ?? '50')));
     const skip = (page - 1) * limit;
+    const where = { userId: req.userId!, ...(type ? { type } : {}) };
 
     const [items, count] = await Promise.all([
       prisma.transaction.findMany({
-        where: { userId: req.userId! },
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
-        include: { pick: { include: { game: true } } },
+        include: {
+          pick: { include: { game: true } },
+          order: { select: { side: true } },
+        },
       }),
-      prisma.transaction.count({ where: { userId: req.userId! } }),
+      prisma.transaction.count({ where }),
     ]);
 
     res.json({

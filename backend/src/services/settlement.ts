@@ -31,6 +31,7 @@ async function creditPayout(
   userId: string,
   weekId: string,
   match: Match,
+  orderId: string,
   amount: number,
 ) {
   await tx.weeklyBalance.update({
@@ -46,6 +47,7 @@ async function creditPayout(
       amount,
       pickId: match.pickId,
       matchId: match.id,
+      orderId,
     },
   });
 }
@@ -55,6 +57,7 @@ async function releaseLocked(
   userId: string,
   weekId: string,
   match: Match,
+  orderId: string,
   amount: number,
 ) {
   await tx.weeklyBalance.update({
@@ -70,6 +73,33 @@ async function releaseLocked(
       amount,
       pickId: match.pickId,
       matchId: match.id,
+      orderId,
+    },
+  });
+}
+
+async function recordLoss(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  weekId: string,
+  match: Match,
+  orderId: string,
+  amount: number,
+) {
+  await tx.weeklyBalance.update({
+    where: { userId_weekId: { userId, weekId } },
+    data: { locked: { decrement: amount } },
+  });
+
+  await tx.transaction.create({
+    data: {
+      userId,
+      weekId,
+      type: 'SETTLEMENT_LOSS',
+      amount: -amount,
+      pickId: match.pickId,
+      matchId: match.id,
+      orderId,
     },
   });
 }
@@ -106,24 +136,17 @@ async function settleGameInTx(
 
       if (result === 'WITH_WON') {
         // Backer returns stake + wins liability; layer loses liability.
-        await releaseLocked(tx, withOrder.userId, weekId, match, match.withStake);
-        await creditPayout(tx, withOrder.userId, weekId, match, match.againstLiability);
-        // Layer's locked liability is lost; just decrement locked.
-        await tx.weeklyBalance.update({
-          where: { userId_weekId: { userId: againstOrder.userId, weekId } },
-          data: { locked: { decrement: match.againstLiability } },
-        });
+        await releaseLocked(tx, withOrder.userId, weekId, match, withOrder.id, match.withStake);
+        await creditPayout(tx, withOrder.userId, weekId, match, withOrder.id, match.againstLiability);
+        await recordLoss(tx, againstOrder.userId, weekId, match, againstOrder.id, match.againstLiability);
       } else if (result === 'AGAINST_WON') {
-        await releaseLocked(tx, againstOrder.userId, weekId, match, match.againstLiability);
-        await creditPayout(tx, againstOrder.userId, weekId, match, match.withStake);
-        await tx.weeklyBalance.update({
-          where: { userId_weekId: { userId: withOrder.userId, weekId } },
-          data: { locked: { decrement: match.withStake } },
-        });
+        await releaseLocked(tx, againstOrder.userId, weekId, match, againstOrder.id, match.againstLiability);
+        await creditPayout(tx, againstOrder.userId, weekId, match, againstOrder.id, match.withStake);
+        await recordLoss(tx, withOrder.userId, weekId, match, withOrder.id, match.withStake);
       } else {
         // Push: both stakes return.
-        await releaseLocked(tx, withOrder.userId, weekId, match, match.withStake);
-        await releaseLocked(tx, againstOrder.userId, weekId, match, match.againstLiability);
+        await releaseLocked(tx, withOrder.userId, weekId, match, withOrder.id, match.withStake);
+        await releaseLocked(tx, againstOrder.userId, weekId, match, againstOrder.id, match.againstLiability);
       }
     }
 

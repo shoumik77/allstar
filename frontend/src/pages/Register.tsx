@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { tokenStore } from '@/lib/api';
 import { EntryShell } from '@/components/EntryShell';
@@ -16,7 +16,7 @@ export function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (tokenStore.access) return <Navigate to="/feed" replace />;
+  if (tokenStore.access) return <Navigate to="/markets" replace />;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,7 +24,7 @@ export function RegisterPage() {
     setSubmitting(true);
     try {
       await register(email, username, password);
-      navigate('/feed', { replace: true });
+      navigate('/markets', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -34,60 +34,82 @@ export function RegisterPage() {
 
   return (
     <EntryShell className="flex flex-col items-center justify-center">
-      <div className="w-full max-w-sm border-4 border-ink bg-paper-raised text-ink shadow-hard-gold-xl">
-        <div className="flex items-center gap-2 border-b-4 border-ink bg-varsity px-5 py-3 font-pixel text-[10px] uppercase text-paper-raised">
-          <UserPlus className="h-4 w-4" />
-          New player
-        </div>
-        <div className="p-5">
-          <p className="mb-4 text-sm text-ink-soft">Create your account. Start each week with 1,000 points.</p>
-          <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      <div className="w-full max-w-[420px] border border-parchment border-t-4 border-t-gold bg-cream p-8">
+        <p className="label text-forest">NEW ACCOUNT</p>
+        <h1 className="mt-2 font-serif text-[36px] leading-[1.05]">Take a seat at the exchange.</h1>
+        <p className="mt-2 text-[12px] leading-[1.6] text-muted">
+          One account per player. Every week starts fresh at 1,000 points.
+        </p>
+
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
+          <div>
+            <label htmlFor="email" className="text-[12px] font-semibold text-ink">
+              Email
+            </label>
             <Input
+              id="email"
               type="email"
-              placeholder="Email"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              className="mt-1.5"
               required
             />
+          </div>
+          <div>
+            <label htmlFor="username" className="text-[12px] font-semibold text-ink">
+              Username
+            </label>
             <Input
-              placeholder="Username"
+              id="username"
+              placeholder="3–20 characters"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               minLength={3}
               maxLength={20}
+              className="mt-1.5"
               required
             />
+          </div>
+          <div>
+            <label htmlFor="password" className="text-[12px] font-semibold text-ink">
+              Password
+            </label>
             <Input
+              id="password"
               type="password"
-              placeholder="Password (8+ characters)"
+              placeholder="8+ characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               minLength={8}
+              className="mt-1.5"
               required
             />
-            {error && (
-              <p className="border-2 border-varsity bg-paper-sunken p-2 font-pixel text-[9px] uppercase leading-relaxed text-varsity">
-                {error}
-              </p>
-            )}
-            <Button type="submit" variant="gold" disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Create account
-            </Button>
-          </form>
-          <p className="mt-4 text-center text-sm text-ink-soft">
-            Already have an account?{' '}
-            <Link to="/login" className="font-pixel text-[10px] uppercase text-varsity underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
+          </div>
+          {error && (
+            <p className="border-l-2 border-burgundy pl-3 text-[12px] leading-[1.5] text-burgundy">{error}</p>
+          )}
+          <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            Create account
+          </Button>
+        </form>
+
+        <p className="mt-5 text-center text-[12px] text-muted">
+          Already have an account?{' '}
+          <Link to="/login" className="font-semibold text-burgundy underline-offset-2 hover:underline">
+            Sign in
+          </Link>
+        </p>
+        <p className="mt-6 text-center font-condensed text-[11px] uppercase tracking-[0.02em] text-burgundy">
+          SIMULATED FUNDS ONLY
+        </p>
       </div>
-      <Link to="/" className="mt-6 font-pixel text-[9px] uppercase text-gold-bright hover:underline">
-        ← Back to field
+      <Link to="/" className="mt-6 text-[12px] text-muted hover:text-ink">
+        ← Back to the gate
       </Link>
     </EntryShell>
   );

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { prisma } from '../prisma.js';
 import { placeOrder } from './matching.js';
+import { settleGame } from './settlement.js';
 import { HttpError } from '../lib/errors.js';
 import { createGamePick, createUser, createWeek, setBalance, truncateAll } from '../test/fixtures.js';
 
@@ -158,5 +159,52 @@ describe('placeOrder balance solvency', () => {
     const layerBalance = await balanceOf(layer.id, week.id);
     expect(backerBalance.balance + backerBalance.locked).toBe(1000);
     expect(layerBalance.balance + layerBalance.locked).toBe(1000);
+  });
+
+  it('settlement writes a SETTLEMENT_LOSS row for the loser', async () => {
+    const backer = await createUser();
+    const layer = await createUser();
+    const week = await createWeek();
+    const { game, pick } = await createGamePick(week.id);
+    await setBalance(backer.id, week.id, 1000);
+    await setBalance(layer.id, week.id, 1000);
+
+    const backerResult = await placeOrder(backer.id, pick.id, { side: 'WITH', risked: 100, limitOdds: -150 });
+    const layerResult = await placeOrder(layer.id, pick.id, { side: 'AGAINST', risked: 67, limitOdds: -150 });
+
+    await prisma.game.update({
+      where: { id: game.id },
+      data: { status: 'FINAL', homeScore: 31, awayScore: 17 },
+    });
+    await settleGame(game.id);
+
+    const losses = await prisma.transaction.findMany({
+      where: { userId: layer.id, type: 'SETTLEMENT_LOSS' },
+    });
+    expect(losses).toHaveLength(1);
+    expect(losses[0]?.amount).toBe(-67);
+    expect(losses[0]?.orderId).toBe(layerResult.order.id);
+    expect(losses[0]?.matchId).toBeDefined();
+
+    const payout = await prisma.transaction.findFirstOrThrow({
+      where: { userId: backer.id, type: 'PAYOUT' },
+    });
+    expect(payout.amount).toBe(67);
+    expect(payout.orderId).toBe(backerResult.order.id);
+
+    const refund = await prisma.transaction.findFirstOrThrow({
+      where: { userId: backer.id, type: 'REFUND' },
+    });
+    expect(refund.amount).toBe(100);
+    expect(refund.orderId).toBe(backerResult.order.id);
+
+    for (const userId of [backer.id, layer.id]) {
+      const balance = await balanceOf(userId, week.id);
+      const realized = await prisma.transaction.aggregate({
+        where: { userId, type: { in: ['PAYOUT', 'SETTLEMENT_LOSS'] } },
+        _sum: { amount: true },
+      });
+      expect(realized._sum.amount ?? 0).toBe(balance.balance + balance.locked - 1000);
+    }
   });
 });

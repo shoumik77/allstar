@@ -63,6 +63,7 @@ enum TransactionType {
   ORDER_CANCEL
   UNMATCHED_REFUND
   WEEKLY_RESET
+  SETTLEMENT_LOSS
 }
 
 model User {

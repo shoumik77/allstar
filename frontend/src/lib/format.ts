@@ -25,3 +25,45 @@ export function formatKickoff(iso: string): string {
 export function formatPoints(points: number): string {
   return points.toLocaleString();
 }
+
+export function formatPts(n: number): string {
+  return `${n.toLocaleString()} pts`;
+}
+
+export function signedPts(n: number): string {
+  const abs = Math.abs(n).toLocaleString();
+  if (n > 0) return `+${abs} pts`;
+  if (n < 0) return `−${abs} pts`;
+  return '0 pts';
+}
+
+export function formatTimeET(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+}
+
+export function formatDateShort(iso: string): string {
+  const date = new Date(iso);
+  const month = date.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short' });
+  const day = date.toLocaleString('en-US', { timeZone: 'America/New_York', day: '2-digit' });
+  const time = date.toLocaleTimeString('en-US', {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return `${month} ${day} · ${time}`;
+}
+
+export function estimatePayout(stake: number, odds: number): number {
+  return stake + Math.round(stake * profitMultiplier(odds));
+}
+
+export function liabilityFor(stake: number, odds: number): number {
+  return Math.round(stake * profitMultiplier(odds));
+}

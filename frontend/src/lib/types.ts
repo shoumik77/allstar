@@ -39,6 +39,7 @@ export type Game = {
   homeSpreadOdds: number | null;
   awaySpreadOdds: number | null;
   oddsUpdatedAt: string | null;
+  week?: Week;
 };
 
 export type GamesResponse = {
@@ -156,18 +157,37 @@ export type LeaderboardResponse = {
   rankings: LeaderboardEntry[];
 };
 
+export type TransactionType =
+  | 'STAKE'
+  | 'REFUND'
+  | 'PAYOUT'
+  | 'ORDER_CANCEL'
+  | 'UNMATCHED_REFUND'
+  | 'WEEKLY_RESET'
+  | 'SETTLEMENT_LOSS';
+
 export type Transaction = {
   id: string;
   userId: string;
   weekId: string;
-  type: string;
+  type: TransactionType;
   amount: number;
   pickId?: string;
   orderId?: string;
   matchId?: string;
   note: string | null;
   createdAt: string;
-  pick?: GamePick & { game: Game };
+  pick?: (GamePick & { game: Game }) | null;
+  order?: { side: OrderSide } | null;
+};
+
+export type MyOrder = Omit<MeResponse['orders'][number], 'pick'> & {
+  pick: MeResponse['orders'][number]['pick'] & { game: Game & { week?: Week } };
+};
+
+export type MyOrdersResponse = {
+  week: Week;
+  orders: MyOrder[];
 };
 
 export type TransactionsResponse = {

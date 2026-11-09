@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { prisma } from '../prisma.js';
+import { notFound } from '../lib/errors.js';
 import { listWeekGames } from '../services/games.js';
 
 export const gamesRouter = Router();
@@ -29,6 +31,16 @@ gamesRouter.get('/', async (req, res, next) => {
       },
       games,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+gamesRouter.get('/:id', async (req, res, next) => {
+  try {
+    const game = await prisma.game.findUnique({ where: { id: req.params.id }, include: { week: true } });
+    if (!game) throw notFound('Game not found', 'game_not_found');
+    res.json(game);
   } catch (err) {
     next(err);
   }

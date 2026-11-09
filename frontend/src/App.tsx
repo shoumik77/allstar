@@ -1,15 +1,22 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
-import { Layout } from '@/components/Layout';
+import { Navigate, Route, Routes, useSearchParams } from 'react-router-dom';
+import { ExchangeShell } from '@/components/exchange/ExchangeShell';
 import { AccessGate } from '@/components/AccessGate';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { HomePage } from '@/pages/Home';
 import { LoginPage } from '@/pages/Login';
 import { RegisterPage } from '@/pages/Register';
-import { GamesPage } from '@/pages/Games';
-import { CreatePickPage } from '@/pages/CreatePick';
-import { FeedPage } from '@/pages/Feed';
-import { MyPicksPage } from '@/pages/MyPicks';
-import { LeaderboardPage } from '@/pages/Leaderboard';
+import { MarketsPage } from '@/pages/Markets';
+import { TerminalPage } from '@/pages/Terminal';
+import { OrdersPage } from '@/pages/Orders';
+import { PositionsPage } from '@/pages/Positions';
+import { ActivityPage } from '@/pages/Activity';
+import { PortfolioPage } from '@/pages/Portfolio';
+
+function CreatePickRedirect() {
+  const [params] = useSearchParams();
+  const gameId = params.get('gameId');
+  return <Navigate to={gameId ? `/markets/${gameId}?new=1` : '/markets'} replace />;
+}
 
 export default function App() {
   return (
@@ -36,16 +43,24 @@ export default function App() {
         element={
           <AccessGate>
             <ProtectedRoute>
-              <Layout />
+              <ExchangeShell />
             </ProtectedRoute>
           </AccessGate>
         }
       >
-        <Route path="/feed" element={<FeedPage />} />
-        <Route path="/games" element={<GamesPage />} />
-        <Route path="/create-pick" element={<CreatePickPage />} />
-        <Route path="/my-picks" element={<MyPicksPage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/markets" element={<MarketsPage />} />
+        <Route path="/markets/:gameId" element={<TerminalPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/positions" element={<PositionsPage />} />
+        <Route path="/activity" element={<ActivityPage />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
+
+        {/* Legacy route redirects (pre-redesign paths). */}
+        <Route path="/feed" element={<Navigate to="/markets" replace />} />
+        <Route path="/games" element={<Navigate to="/markets" replace />} />
+        <Route path="/my-picks" element={<Navigate to="/positions" replace />} />
+        <Route path="/leaderboard" element={<Navigate to="/portfolio" replace />} />
+        <Route path="/create-pick" element={<CreatePickRedirect />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
